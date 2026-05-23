@@ -44,9 +44,5 @@ class KiraoujApplication {
 
 
 fun main(args: Array<String>) {
-//    Database.connect("jdbc:sqlite:/Users/elfennani/kiraouj/data.db", "org.sqlite.JDBC")
-//    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
-//    transaction { SchemaUtils.create(TaskEntity) }
-
     runApplication<KiraoujApplication>(*args)
 }
