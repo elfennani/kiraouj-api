@@ -23,6 +23,8 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build
+        env:
+          DATABASE_URL: jdbc:sqlite:file:test?mode=memory&cache=shared
         run: ./gradlew clean build
 
       - name: Find JAR
