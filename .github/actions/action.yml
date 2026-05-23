@@ -1,0 +1,57 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Grant execute permission
+        run: chmod +x gradlew
+
+      - name: Build
+        run: ./gradlew clean build
+
+      - name: Find JAR
+        id: jar
+        run: |
+          JAR=$(find build/libs -name "*.jar" ! -name "*plain.jar" | head -n 1)
+          echo "jar=$JAR" >> $GITHUB_OUTPUT
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload JAR
+        run: |
+          scp "${{ steps.jar.outputs.jar }}" \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/app.jar
+
+      - name: Deploy
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            sudo systemctl stop myapp
+
+            sudo mkdir -p /opt/myapp
+            sudo mv /tmp/app.jar /opt/myapp/app.jar
+
+            sudo systemctl start myapp
+
+            sudo systemctl status myapp --no-pager
+          EOF
