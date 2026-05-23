@@ -46,12 +46,19 @@ jobs:
       - name: Deploy
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
-            sudo systemctl stop myapp
+            sudo systemctl stop kiraouj || true
 
-            sudo mkdir -p /opt/myapp
-            sudo mv /tmp/app.jar /opt/myapp/app.jar
+            sudo mkdir -p /opt/kiraouj
+            sudo mv /tmp/app.jar /opt/kiraouj/app.jar
 
-            sudo systemctl start myapp
+            sudo chown -R root:root /opt/kiraouj
+            sudo chmod -R 755 /opt/kiraouj
 
-            sudo systemctl status myapp --no-pager
+            sudo systemctl daemon-reload
+            sudo systemctl enable kiraouj
+            sudo systemctl start kiraouj
+
+            sudo systemctl status kiraouj --no-pager
+
+            sudo systemctl restart nginx || true
           EOF
